@@ -9,7 +9,6 @@ const client = new MongoClient(uri!);
 
 async function establishConnection(): Promise<Db> {
   try {
-    console.log("Connecting to the db", uri);
     await client.connect();
     return client.db("photos-app");
   } catch (e) {

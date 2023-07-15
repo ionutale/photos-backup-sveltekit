@@ -1,10 +1,9 @@
 import { fail } from '@sveltejs/kit';
-import { writeFileSync } from 'fs';
 import { Storage } from '@google-cloud/storage';
 const bucketName = 'aiu-family-media';
 
 export const actions = {
-  login: async (event) => {
+  upload: async (event) => {
     const formData = Object.fromEntries(await event.request.formData());
 
     if (
@@ -25,15 +24,11 @@ export const actions = {
     return {
       success: true
     };
-
-  },
-  register: async (event) => {
-    // TODO register the user
-    console.log(event.body);
   }
 };
 
 async function loadFileTestFile(file: File) {
+  try {
   // Creates a client
   const storage = new Storage();
   // Uploads a local file to the bucket
@@ -42,6 +37,9 @@ async function loadFileTestFile(file: File) {
   await storage.bucket(bucketName).file(file.name).save(
     newBuffer,
     {}).catch(console.error);
-
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
 };
 
