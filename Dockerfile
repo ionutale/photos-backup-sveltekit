@@ -1,6 +1,9 @@
 FROM node:18.13.0-alpine3.16
+
+ARG MONGO_URI
+ENV MONGO_URI=$MONGO_URI
 ENV NODE_ENV=production
-ENV MONGO_URI=mongodb+srv://tesst:test@photoscluster0.ewcpuvc.mongodb.net/test
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./
