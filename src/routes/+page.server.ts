@@ -4,26 +4,35 @@ const bucketName = 'aiu-family-media';
 
 export const actions = {
   upload: async (event) => {
-    const formData = Object.fromEntries(await event.request.formData());
-
-    if (
-      !(formData.photos as File).name ||
-      (formData.photos as File).name === 'undefined'
-    ) {
+    try {
+      
+      const formData = Object.fromEntries(await event.request.formData());
+      
+      if (
+        !(formData.photos as File).name ||
+        (formData.photos as File).name === 'undefined'
+        ) {
       return fail(400, {
         error: true,
         message: 'You must provide a file to upload'
       });
     }
-
+    
     const { photos } = formData as { photos: File };
-
+    
     // Write the file to the static folder
     await loadFileTestFile(photos);
-
+    
     return {
       success: true
     };
+  } catch (error: any) {
+    console.error(error);
+    return fail(500, {
+      error: true,
+      message: error?.message || 'An unknown error occurred'
+    });
+  }
   }
 };
 
