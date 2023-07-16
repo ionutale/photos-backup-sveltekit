@@ -20,7 +20,7 @@
 
 {#each photos || [] as photo, i}
 	<div>
-		<img src={URL.createObjectURL(photo)} alt="photo" width="100" height="100" />
+		<img src={URL.createObjectURL(photo)} alt={photo.name} width="100" height="100" />
 		<p>{i}-{photo.name} <span>{beautifySize(photo.size)}</span> </p>
 	</div>
 {/each}
