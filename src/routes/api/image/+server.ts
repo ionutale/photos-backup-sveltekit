@@ -17,6 +17,9 @@ export const GET: RequestHandler = async (event) => {
     });
   } catch (e: any) {
     console.error("error requesting the image from google cloud storage", e.message);
-    throw e;
+    // throw e;
+    return new Response(e.message, {
+      status: 500
+    });
   }
 }

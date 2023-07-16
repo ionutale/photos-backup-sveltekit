@@ -24,7 +24,6 @@
 	}
 
 	function progressHandler(event: ProgressEvent, file: File) {
-		console.log('progressHandler', event);
     progress = Math.round((event.loaded / event.total) * 100);
 	}
 

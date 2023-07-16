@@ -23,7 +23,7 @@ export const actions = {
         }
 
         // Write the file to the static folder
-        await loadFileTestFile(photo as File);
+        await uploadPhoto(photo as File);
         await saveFileMetadaDataToDb(event.locals.db, photo as File);
       });
 
@@ -40,7 +40,7 @@ export const actions = {
   }
 };
 
-async function loadFileTestFile(file: File) {
+async function uploadPhoto(file: File) {
   try {
     // Creates a client
     const storage = new Storage();
