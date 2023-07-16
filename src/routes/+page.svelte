@@ -8,6 +8,6 @@
 
 <form method="POST" action="?/upload" use:enhance>
 	<label for="photos">Choose a photos to upload</label>
-	<input type="file" id="photos" name="photos" accept="image/*" />
+	<input type="file" id="photos" name="photos" accept="image/*" multiple/>
 	<button>Submit</button>
 </form>
