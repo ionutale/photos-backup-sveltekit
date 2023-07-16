@@ -47,8 +47,8 @@
 <div>
 	<img src={URL.createObjectURL(photo)} alt={photo.name} width="100" height="100" />
 	<p>{index}-{photo.name} <span>{beautifySize(photo.size)}</span></p>
+  <button on:click={() => uploadFile(photo)}>{progress > 0 ? `uploading ... ${progress}%`: 'Upload'}</button>
 </div>
-<button on:click={() => uploadFile(photo)}>{progress > 0 ? `uploading ... ${progress}%`: 'Upload'}</button>
 
 <style>
 	div {

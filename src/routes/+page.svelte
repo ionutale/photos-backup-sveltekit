@@ -5,7 +5,6 @@
 
 <label for="photos">Choose a photos to upload</label>
 <input type="file" id="photos" name="photos" accept="image/*" bind:files={photos} multiple />
-<button>Submit</button>
 
 {#each photos || [] as photo, index}
 	<UploadPreview {photo} {index} />
