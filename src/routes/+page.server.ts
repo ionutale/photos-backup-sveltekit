@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { Storage } from '@google-cloud/storage';
 const bucketName = 'aiu-family-media';
+import { Db, ObjectId } from "mongodb";
 
 export const actions = {
   upload: async (event) => {
@@ -23,6 +24,7 @@ export const actions = {
 
         // Write the file to the static folder
         await loadFileTestFile(photo as File);
+        await saveFileMetadaDataToDb(event.locals.db, photo as File);
       });
 
       return {
@@ -55,3 +57,18 @@ async function loadFileTestFile(file: File) {
   }
 };
 
+async function saveFileMetadaDataToDb(db: Db, file: File) {
+  try {
+    const result = await db.collection("photos").insertOne({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      webkitRelativePath: file.webkitRelativePath
+    });
+    console.log("file metadata saved to db", result);
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+}
