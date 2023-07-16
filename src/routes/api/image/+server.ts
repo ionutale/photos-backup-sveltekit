@@ -15,8 +15,8 @@ export const GET: RequestHandler = async (event) => {
         "Content-Type": "image/jpeg"
       }
     });
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    console.error("error requesting the image from google cloud storage", e.message);
     throw e;
   }
 }
