@@ -1,7 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 const bucketName = 'aiu-family-media';
 import type { RequestHandler } from '@sveltejs/kit';
-
+import sharp from 'sharp';
 
 export const GET: RequestHandler = async (event) => {
   try {
@@ -10,9 +10,16 @@ export const GET: RequestHandler = async (event) => {
     const storage = new Storage();
     // Uploads a local file to the bucket
     const [file] = await storage.bucket(bucketName).file(fileName).download();
-    return new Response(file, {
+
+    // resize the image and convert it to avif
+    const resizedImage = await sharp(file)
+      .resize(200, 200)
+      .avif()
+      .toBuffer();
+    // return the resized image
+    return new Response(resizedImage, {
       headers: {
-        "Content-Type": "image/jpeg"
+        "Content-Type": "image/avif"
       }
     });
   } catch (e: any) {
