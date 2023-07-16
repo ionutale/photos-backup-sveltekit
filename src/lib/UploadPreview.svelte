@@ -28,7 +28,6 @@
 	}
 
 	function completeHandler(event: ProgressEvent) {
-		console.log('completeHandler', event);
     progress = 0;
 	}
 
