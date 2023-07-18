@@ -16,6 +16,7 @@
 			<img
 				src="/api/image?filename={photo.name}&q=80&w=100&h=100&fm=avif"
 				srcset={generateSrcset(photo.name)}
+				sizes="calc(100vw / 4 - calc(0.1rem * 4))"
 				alt={photo.name}
 				decoding="async"
 				loading="lazy"
