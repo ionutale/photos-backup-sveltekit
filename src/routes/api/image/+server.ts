@@ -12,41 +12,18 @@ export const GET: RequestHandler = async (event) => {
     const height = Number(event.url.searchParams.get("h")) || 200;
     const format = event.url.searchParams.get("fm") || "jpg";
     const quality = Number(event.url.searchParams.get("q")) || 75;
-r
     // Creates a client
-    const storage = new Storage();
-
-    // first check if the image is in the cache bucket
-    const [cacheFile] = await storage.bucket(chacheBucketName).file(fileName).download().catch((e) => {
-      console.error("error requesting the image from the cache bucket", e);
-      return [null];
-    });
-    if (cacheFile) {
-      // return the cached image
-      return new Response(cacheFile, {
-        headers: {
-          "Content-Type": `image/${format}`
-        }
-      });
-    }
-
-    // Uploads a local file to the bucket
-    const [file] = await storage.bucket(bucketName).file(fileName).download();
-    // resize the image and convert it to avif
-    const resizedImage = await convertPhoto(file, width, height, format, quality);
-
-    // save the resized image to the cache bucket
-    await storage.bucket(chacheBucketName).file(fileName).save(resizedImage).catch((e) => {
-      console.error("error saving the image to the cache bucket", e);
-    })
+    const { cacheFile, contentType } = await getPhoto(fileName, width, height, format, quality);
     // return the resized image
-    return new Response(resizedImage, {
+    return new Response(cacheFile, {
       headers: {
-        "Content-Type": "image/avif"
-      }
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable'
+      },
+      status: 200
     });
   } catch (e: any) {
-    console.error("error requesting the image from google cloud storage", e.message);
+    console.error(e);
     // throw e;
     return new Response(e.message, {
       status: 500
@@ -58,11 +35,11 @@ function convertPhoto(file: Buffer, width: number, height: number, format: strin
 
   const sharpBuffer = sharp(file);
 
-  if(width > 0 && height > 0) {
+  if (width > 0 && height > 0) {
     sharpBuffer.resize(width, height);
-  } else if(width > 0) {
+  } else if (width > 0) {
     sharpBuffer.resize(width);
-  } else if(height > 0) {
+  } else if (height > 0) {
     sharpBuffer.resize(null, height);
   }
 
@@ -88,5 +65,37 @@ function convertPhoto(file: Buffer, width: number, height: number, format: strin
       return sharpBuffer
         .jpeg({ quality: quality, force: true })
         .toBuffer();
+  }
+}
+
+async function getPhoto(fileName: string, width: number, height: number, format: string, quality: number) {
+  const storage = new Storage();
+  const processedFileName = `${fileName}-${width}-${height}-${format}-${quality}`;
+
+  const [cacheFile] = await storage.bucket(chacheBucketName).file(processedFileName).download().catch((e) => {
+    console.error("error requesting the image from the cache bucket", e);
+    return [null];
+  });
+  if (cacheFile) {
+    // return the cached image
+    return {
+      cacheFile,
+      contentType: `image/${format}`
+    }
+  }
+
+  // Uploads a local file to the bucket
+  const [file] = await storage.bucket(bucketName).file(fileName).download();
+  // resize the image and convert it to avif
+  const resizedImage = await convertPhoto(file, width, height, format, quality);
+
+  // save the resized image to the cache bucket
+  await storage.bucket(chacheBucketName).file(processedFileName).save(resizedImage).catch((e) => {
+    console.error("error saving the image to the cache bucket", e);
+  })
+
+  return {
+    cacheFile: resizedImage,
+    contentType: `image/${format}`
   }
 }
