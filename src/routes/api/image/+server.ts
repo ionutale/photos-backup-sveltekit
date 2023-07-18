@@ -73,7 +73,7 @@ async function getPhoto(fileName: string, width: number, height: number, format:
   const processedFileName = `${fileName}-${width}-${height}-${format}-${quality}`;
 
   const [cacheFile] = await storage.bucket(chacheBucketName).file(processedFileName).download().catch((e) => {
-    console.error("error requesting the image from the cache bucket", e);
+    console.error(e.message);
     return [null];
   });
   if (cacheFile) {

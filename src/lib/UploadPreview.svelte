@@ -1,7 +1,11 @@
 <script lang="ts">
 	export let photo: File;
 	export let index: number;
-  $: progress = 0;
+	$: progress = 0;
+	export let autoUpload: boolean | undefined = false;
+
+	type UploadStatus = 'idle' | 'uploading' | 'success' | 'error';
+	let uploadStatus: UploadStatus = 'idle';
 
 	function beautifySize(byte: number) {
 		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -15,7 +19,7 @@
 		formData.append('file', file);
 
 		var ajax = new XMLHttpRequest();
-		ajax.upload.addEventListener('progress',(event)=> progressHandler(event, file), false);
+		ajax.upload.addEventListener('progress', (event) => progressHandler(event, file), false);
 		ajax.addEventListener('load', completeHandler, false);
 		ajax.addEventListener('error', errorHandler, false);
 		ajax.addEventListener('abort', abortHandler, false);
@@ -24,28 +28,49 @@
 	}
 
 	function progressHandler(event: ProgressEvent, file: File) {
-    progress = Math.round((event.loaded / event.total) * 100);
+		progress = Math.round((event.loaded / event.total) * 100);
+		uploadStatus = 'uploading';
 	}
 
 	function completeHandler(event: ProgressEvent) {
-    progress = 0;
+		progress = 0;
+		uploadStatus = 'success';
 	}
 
 	function errorHandler(event: ProgressEvent) {
 		console.log('errorHandler', event);
-    progress = 0;
+		progress = 0;
+		uploadStatus = 'error';
 	}
 
 	function abortHandler(event: ProgressEvent) {
 		console.log('abortHandler', event);
-    progress = 0;
+		progress = 0;
+		uploadStatus = 'error';
+	}
+
+	function buttonTitle(p: number) {
+		if (p === 0) return 'Upload';
+		if (p === 100) return 'Done';
+		return `${p}%`;
+	}
+
+	if (autoUpload) {
+		console.log('autoUpload', autoUpload, "uploading...");
+		uploadFile(photo);
 	}
 </script>
 
 <div>
 	<img src={URL.createObjectURL(photo)} alt={photo.name} width="100" height="100" />
-	<p>{index}-{photo.name} <span>{beautifySize(photo.size)}</span></p>
-  <button on:click={() => uploadFile(photo)}>{progress > 0 ? `uploading ... ${progress}%`: 'Upload'}</button>
+	<p>{index}-{photo.name} <span>{beautifySize(photo.size)}</span>{autoUpload}</p>
+	{#if uploadStatus === 'success'}
+		<p>✅</p>
+	{:else}
+		<button disabled={uploadStatus === 'uploading'} on:click={() => uploadFile(photo)}
+			>{buttonTitle(progress)}</button
+		>
+	{/if}
 </div>
 
 <style>
