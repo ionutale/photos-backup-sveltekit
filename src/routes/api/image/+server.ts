@@ -7,7 +7,12 @@ import sharp from 'sharp';
 
 export const GET: RequestHandler = async (event) => {
   try {
-    const fileName = event.url.searchParams.get("filename");
+    const fileName = event.url.searchParams.get("filename") || "default.jpg";
+    const width = Number(event.url.searchParams.get("w")) || 200;
+    const height = Number(event.url.searchParams.get("h")) || 200;
+    const format = event.url.searchParams.get("fm") || "jpg";
+    const quality = Number(event.url.searchParams.get("q")) || 75;
+r
     // Creates a client
     const storage = new Storage();
 
@@ -20,7 +25,7 @@ export const GET: RequestHandler = async (event) => {
       // return the cached image
       return new Response(cacheFile, {
         headers: {
-          "Content-Type": "image/avif"
+          "Content-Type": `image/${format}`
         }
       });
     }
@@ -28,10 +33,7 @@ export const GET: RequestHandler = async (event) => {
     // Uploads a local file to the bucket
     const [file] = await storage.bucket(bucketName).file(fileName).download();
     // resize the image and convert it to avif
-    const resizedImage = await sharp(file)
-      .resize(200, 200)
-      .avif()
-      .toBuffer();
+    const resizedImage = await convertPhoto(file, width, height, format, quality);
 
     // save the resized image to the cache bucket
     await storage.bucket(chacheBucketName).file(fileName).save(resizedImage).catch((e) => {
@@ -49,5 +51,36 @@ export const GET: RequestHandler = async (event) => {
     return new Response(e.message, {
       status: 500
     });
+  }
+}
+
+function convertPhoto(file: Buffer, width: number, height: number, format: string, quality: number) {
+  switch (format) {
+    case "avif":
+      return sharp(file)
+        .resize(width, height)
+        .avif({ quality: quality, force: true })
+        .toBuffer();
+    case "webp":
+      return sharp(file)
+        .resize(width, height)
+        .webp({ quality: quality, force: true })
+        .toBuffer();
+    case "jpg":
+      return sharp(file)
+        .resize(width, height)
+        .jpeg({ quality: quality, force: true })
+        .toBuffer();
+    case "png":
+      return sharp(file)
+        .resize(width, height)
+        .png({ quality: quality, force: true })
+        .toBuffer();
+
+    default:
+      return sharp(file)
+        .resize(width, height)
+        .jpeg({ quality: quality, force: true })
+        .toBuffer();
   }
 }
