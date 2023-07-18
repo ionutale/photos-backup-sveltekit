@@ -13,7 +13,7 @@
 
 <style>
 	main {
-		margin: 1rem 1rem 4rem 1rem;
+		margin: 0;
 	}
 
 	nav {
