@@ -3,16 +3,20 @@
 
 	export let data: PageData;
 	const photos = data.photos;
+
+	function generateSrcset(name: string) {
+		const sizes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+		return sizes.map((size) => `/api/image?filename=${name}&q=80&w=${size}&h=${size}&fm=avif ${size}w`).join(', ');
+	}
 </script>
 
 <section>
 	{#each photos as photo, i}
 		<div class="image-card">
 			<img
-				src="/api/image?filename={photo.name}"
+				src="/api/image?filename={photo.name}&q=80&w=100&h=100&fm=avif"
+				srcset={generateSrcset(photo.name)}
 				alt={photo.name}
-				width="100"
-				height="100"
 				decoding="async"
 				loading="lazy"
 			/>
