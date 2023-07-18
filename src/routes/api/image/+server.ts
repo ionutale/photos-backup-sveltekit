@@ -55,31 +55,37 @@ r
 }
 
 function convertPhoto(file: Buffer, width: number, height: number, format: string, quality: number) {
+
+  const sharpBuffer = sharp(file);
+
+  if(width > 0 && height > 0) {
+    sharpBuffer.resize(width, height);
+  } else if(width > 0) {
+    sharpBuffer.resize(width);
+  } else if(height > 0) {
+    sharpBuffer.resize(null, height);
+  }
+
   switch (format) {
     case "avif":
-      return sharp(file)
-        .resize(width, height)
+      return sharpBuffer
         .avif({ quality: quality, force: true })
         .toBuffer();
     case "webp":
-      return sharp(file)
-        .resize(width, height)
+      return sharpBuffer
         .webp({ quality: quality, force: true })
         .toBuffer();
     case "jpg":
-      return sharp(file)
-        .resize(width, height)
+      return sharpBuffer
         .jpeg({ quality: quality, force: true })
         .toBuffer();
     case "png":
-      return sharp(file)
-        .resize(width, height)
+      return sharpBuffer
         .png({ quality: quality, force: true })
         .toBuffer();
 
     default:
-      return sharp(file)
-        .resize(width, height)
+      return sharpBuffer
         .jpeg({ quality: quality, force: true })
         .toBuffer();
   }
