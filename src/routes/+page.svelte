@@ -39,6 +39,7 @@
     margin: auto;
     width: calc(100vw / 4 - calc(0.1rem * 4));
     aspect-ratio: 1/1;
+		background-color: aliceblue;
 	}
 	.image-card img {
 		width: 100%;
