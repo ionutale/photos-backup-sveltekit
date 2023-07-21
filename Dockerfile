@@ -62,6 +62,7 @@ ARG MONGO_URI
 ENV MONGO_URI=$MONGO_URI
 ENV NODE_ENV=production
 
+RUN apk add pkgconf vips
 WORKDIR /app
 
 COPY package.json package-lock.json ./
