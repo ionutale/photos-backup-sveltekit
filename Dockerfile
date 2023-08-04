@@ -1,6 +1,6 @@
 FROM node:18.13.0-alpine
 
-# RUN apk update
+RUN apk update
 # RUN apk add --update alpine-sdk
 # RUN apk add libffi-dev openssl-dev
 # RUN apk --no-cache --update add build-base
@@ -29,8 +29,8 @@ FROM node:18.13.0-alpine
 # RUN apk add gtk-doc
 # RUN apk add libtool
 # RUN apk add nasm
-# RUN apk add pkgconf 
-# RUN apk add vips
+RUN apk add pkgconf 
+RUN apk add vips
 
 # RUN pip3 install --upgrade pip
 # RUN pip3 install --upgrade setuptools
@@ -67,6 +67,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 RUN rm -rf /node_modules/sharp
+RUN npm install heic-convert
 RUN SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linuxmusl --libc=glibc sharp
 
 COPY . .

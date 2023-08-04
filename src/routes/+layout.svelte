@@ -1,15 +1,78 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { initializeApp, type FirebaseApp } from 'firebase/app';
+	import {
+		GoogleAuthProvider,
+		getAuth,
+		signInWithPopup,
+		getRedirectResult,
+		type User
+	} from 'firebase/auth';
+	import { onMount } from 'svelte';
+
+	const firebaseConfig = {
+		apiKey: 'AIzaSyCQi_vhXlImx0eTNSKWzoAA3g6aCRxGzi8',
+		authDomain: 'beta-dodolandia.firebaseapp.com',
+		databaseURL: 'https://beta-dodolandia.firebaseio.com',
+		projectId: 'beta-dodolandia',
+		storageBucket: 'beta-dodolandia.appspot.com',
+		messagingSenderId: '265210792609',
+		appId: '1:265210792609:web:08ac22cc70d490dee5fee0',
+		measurementId: 'G-FWZL7KZRHM'
+	};
+
+	// Initialize Firebase
+	let app: FirebaseApp | null = null;
+	let user: User | null = null;
+
+	onMount(async () => {
+		try {
+			// check if firebase is already initialized and user is logged in
+			if (!app) {
+				app = initializeApp(firebaseConfig);
+			}
+			const auth = getAuth();
+			auth.onAuthStateChanged((_user) => {
+				if (_user) {
+					console.log('user', _user);
+					user = _user;
+				} else {
+					console.log('no user');
+				}
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	const login = async () => {
+		try {
+			console.log('login');
+			const provider = new GoogleAuthProvider();
+			const auth = getAuth();
+			const result = await signInWithPopup(auth, provider);
+			console.log('result', result);
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	let y: number;
 </script>
 
-<main class="main-content">
-	<slot />
-</main>
-<nav>
-	<a data-selected={$page.routeId === ''} href="/">Home</a>
-	<a data-selected={$page.routeId?.includes('upload')} href="/upload">upload</a>
-</nav>
+{#if !user}
+	<button 
+	class="login-button"
+	on:click={login}>login</button>
+{:else}
+	<main class="main-content">
+		<slot />
+	</main>
+	<nav>
+		<a data-selected={$page.routeId === ''} href="/">Home</a>
+		<a data-selected={$page.routeId?.includes('upload')} href="/upload">upload</a>
+	</nav>
+{/if}
 
 <style>
 	main {
@@ -40,4 +103,17 @@
 		color: #000;
 		border-top: blue 2px solid;
 	}
+
+	.login-button {
+		margin: 50vh auto;
+		display: block;
+		background-color: blue;
+		color: white;
+		padding: 1rem;
+		border: none;
+		border-radius: 25%;
+		cursor: pointer;
+ 		transition: all 0.2s ease;
+	}
+
 </style>
