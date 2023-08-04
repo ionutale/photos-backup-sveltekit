@@ -55,6 +55,8 @@
 	};
 
 	let y: number;
+
+	console.log('page', $page.route);
 </script>
 
 {#if $auth.user === null}
@@ -66,8 +68,8 @@
 		<slot />
 	</main>
 	<nav>
-		<a data-selected={$page.routeId === ''} href="/">Home</a>
-		<a data-selected={$page.routeId?.includes('upload')} href="/upload">upload</a>
+		<a data-selected={$page.route.id === '/'} href="/">Home</a>
+		<a data-selected={$page.route.id?.includes('upload')} href="/upload">upload</a>
 	</nav>
 {/if}
 
@@ -97,7 +99,7 @@
 	}
 
 	nav a[data-selected='true'] {
-		color: #000;
+		color: blue;
 		border-top: blue 2px solid;
 	}
 
