@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { User } from "firebase/auth";
+	import type { User } from 'firebase/auth';
 
 	export let photo: File;
 	export let index: number;
@@ -27,9 +27,7 @@
 			formData.append('uid', user?.uid || '');
 
 			let ajax = new XMLHttpRequest();
-			// ajax.
 			ajax.withCredentials = true;
-			// ajax.setRequestHeader('Cookie', 'mycookie=cookie');
 
 			ajax.upload.addEventListener('progress', (event) => progressHandler(event, file), false);
 			ajax.addEventListener('load', completeHandler, false);
@@ -40,6 +38,8 @@
 		} catch (error) {
 			console.log(error);
 		}
+
+		autoUpload = false;
 	}
 
 	function progressHandler(event: ProgressEvent, file: File) {
@@ -70,7 +70,7 @@
 		return `${p}%`;
 	}
 
-	if (autoUpload) {
+	$: if (autoUpload) {
 		console.log('autoUpload', autoUpload, 'uploading...');
 		uploadFile(photo);
 	}
@@ -78,7 +78,7 @@
 
 <div>
 	<img src={URL.createObjectURL(photo)} alt={photo.name} width="100" height="100" />
-	<p>{index}-{photo.name} <span>{beautifySize(photo.size)}</span>{autoUpload}</p>
+	<p>{index}-{photo.name} <span>{beautifySize(photo.size)}</span></p>
 	{#if uploadStatus === 'success'}
 		<p>✅</p>
 	{:else}
@@ -99,6 +99,7 @@
 
 	img {
 		display: block;
+		object-fit: cover;
 	}
 
 	p {

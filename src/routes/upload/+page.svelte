@@ -8,6 +8,12 @@
 	function uploadAll() {
 		autoUpload = true;
 	}
+
+	function resetInput() {
+		console.log('toggle');
+		photos = new FileList();
+		autoUpload = false;
+	}
 </script>
 
 <label for="photos">Choose a photos to upload</label>
@@ -18,12 +24,12 @@
 	accept="image/*"
 	bind:files={photos}
 	multiple
-	on:change={() => (autoUpload = false)}
+	on:change={resetInput}
 />
 <button on:click={uploadAll}>Upload All</button>
 
 {#each photos || [] as photo, index}
-	<UploadPreview {photo} {index} {autoUpload} user={$auth.user} />
+	<UploadPreview {photo} {index} bind:autoUpload user={$auth.user} />
 {/each}
 
 <style>

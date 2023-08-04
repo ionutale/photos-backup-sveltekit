@@ -9,7 +9,6 @@ export interface Photo {
   lastModified: number;
 }
 
-
 export const load: PageServerLoad = async ({ locals, cookies }) => {
 
   const user = JSON.parse(cookies.get('user') || "{}");

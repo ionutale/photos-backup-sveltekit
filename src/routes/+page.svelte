@@ -19,7 +19,8 @@
 				sizes="calc(100vw / 4 - calc(0.1rem * 4))"
 				alt={photo.name}
 				decoding="async"
-				loading="lazy"
+				loading={i < 10 ? 'eager' : 'lazy'}
+				fetchpriority={i < 10 ? 'high' : 'low'}
 			/>
 		</div>
 	{/each}
@@ -44,6 +45,7 @@
 	.image-card img {
 		width: 100%;
 		height: 100%;
+		object-fit: cover;
 	}
 
 	.image-card p {
