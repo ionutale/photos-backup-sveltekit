@@ -2,7 +2,8 @@
 import { Storage } from '@google-cloud/storage';
 import type { RequestHandler } from '@sveltejs/kit';
 
-const bucketName = 'aiu-family-media';
+// const bucketName = 'aiu-family-media';
+const bucketName = 'aiu-family-media-temp';
 
 async function loadFileTestFile() {
   // Creates a client

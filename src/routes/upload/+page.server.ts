@@ -2,19 +2,23 @@ import { fail } from '@sveltejs/kit';
 import { Storage } from '@google-cloud/storage';
 const bucketName = 'aiu-family-media';
 import type { Db } from "mongodb";
+import type { RequestEvent } from '../$types.js';
 
 export const actions = {
-  upload: async (event) => {
+  upload: async (event: RequestEvent) => {
     try {
+      // console.log("uploading file, event", event);
 
       const formData = await event.request.formData();
 
-      formData.forEach(async (photo: any, key: string) => {
-        // console.log("form item", { key, photo });
+      const files = formData.getAll('file');
+      const username = formData.get('username');
 
+      files.forEach(async (file: any) => {
+        console.log({ file });
         if (
-          !(photo as File).name ||
-          (photo as File).name === 'undefined'
+          !(file as File).name ||
+          (file as File).name === 'undefined'
         ) {
           return fail(400, {
             error: true,
@@ -23,8 +27,8 @@ export const actions = {
         }
 
         // Write the file to the static folder
-        await uploadPhoto(photo as File);
-        await saveFileMetadaDataToDb(event.locals.db, photo as File);
+        await uploadPhoto(file as File);
+        await saveFileMetadaDataToDb(event.locals.db, file as File, { username });
       });
 
       return {
@@ -57,14 +61,15 @@ async function uploadPhoto(file: File) {
   }
 };
 
-async function saveFileMetadaDataToDb(db: Db, file: File) {
+async function saveFileMetadaDataToDb(db: Db, file: File, otherData?: any) {
   try {
     const result = await db.collection("photos").insertOne({
       name: file.name,
       size: file.size,
       type: file.type,
       lastModified: file.lastModified,
-      webkitRelativePath: file.webkitRelativePath
+      webkitRelativePath: file.webkitRelativePath,
+      ...otherData
     });
     console.log("file metadata saved to db", result);
   } catch (e) {

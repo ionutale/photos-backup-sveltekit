@@ -15,16 +15,27 @@
 	}
 
 	function uploadFile(file: File) {
-		const formData = new FormData();
-		formData.append('file', file);
+		try {
+			console.log('uploadFile', file);
 
-		var ajax = new XMLHttpRequest();
-		ajax.upload.addEventListener('progress', (event) => progressHandler(event, file), false);
-		ajax.addEventListener('load', completeHandler, false);
-		ajax.addEventListener('error', errorHandler, false);
-		ajax.addEventListener('abort', abortHandler, false);
-		ajax.open('POST', '?/upload');
-		ajax.send(formData);
+			const formData = new FormData();
+			formData.append('file', file);
+			formData.append('username', 'abc123');
+
+			let ajax = new XMLHttpRequest();
+			// ajax.
+			ajax.withCredentials = true;
+			// ajax.setRequestHeader('Cookie', 'mycookie=cookie');
+
+			ajax.upload.addEventListener('progress', (event) => progressHandler(event, file), false);
+			ajax.addEventListener('load', completeHandler, false);
+			ajax.addEventListener('error', errorHandler, false);
+			ajax.addEventListener('abort', abortHandler, false);
+			ajax.open('POST', '?/upload');
+			ajax.send(formData);
+		} catch (error) {
+			console.log(error);
+		}
 	}
 
 	function progressHandler(event: ProgressEvent, file: File) {
@@ -56,7 +67,7 @@
 	}
 
 	if (autoUpload) {
-		console.log('autoUpload', autoUpload, "uploading...");
+		console.log('autoUpload', autoUpload, 'uploading...');
 		uploadFile(photo);
 	}
 </script>
