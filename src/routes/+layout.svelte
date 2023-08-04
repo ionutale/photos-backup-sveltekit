@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { initializeApp, type FirebaseApp } from 'firebase/app';
+	import {auth, type Auth} from '$lib/auth-context';
+
 	import {
 		GoogleAuthProvider,
 		getAuth,
 		signInWithPopup,
-		getRedirectResult,
 		type User
 	} from 'firebase/auth';
 	import { onMount } from 'svelte';
@@ -23,7 +24,6 @@
 
 	// Initialize Firebase
 	let app: FirebaseApp | null = null;
-	let user: User | null = null;
 
 	onMount(async () => {
 		try {
@@ -31,14 +31,11 @@
 			if (!app) {
 				app = initializeApp(firebaseConfig);
 			}
-			const auth = getAuth();
-			auth.onAuthStateChanged((_user) => {
-				if (_user) {
-					console.log('user', _user);
-					user = _user;
-				} else {
-					console.log('no user');
-				}
+			const fAuth = getAuth();
+			fAuth.onAuthStateChanged((_user) => {
+			  auth.set({ user: _user } as Auth);
+				// set cookie with user info
+				document.cookie = `user=${JSON.stringify(_user)}`;
 			});
 		} catch (error) {
 			console.log(error);
@@ -60,7 +57,7 @@
 	let y: number;
 </script>
 
-{#if !user}
+{#if $auth.user === null}
 	<button 
 	class="login-button"
 	on:click={login}>login</button>

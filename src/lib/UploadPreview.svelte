@@ -1,6 +1,9 @@
 <script lang="ts">
+	import type { User } from "firebase/auth";
+
 	export let photo: File;
 	export let index: number;
+	export let user: User | null;
 	$: progress = 0;
 	export let autoUpload: boolean | undefined = false;
 
@@ -20,7 +23,8 @@
 
 			const formData = new FormData();
 			formData.append('file', file);
-			formData.append('username', 'abc123');
+			formData.append('username', user?.displayName || user?.uid || '');
+			formData.append('uid', user?.uid || '');
 
 			let ajax = new XMLHttpRequest();
 			// ajax.

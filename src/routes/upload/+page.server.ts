@@ -13,6 +13,7 @@ export const actions = {
 
       const files = formData.getAll('file');
       const username = formData.get('username');
+      const uid = formData.get('uid');
 
       files.forEach(async (file: any) => {
         console.log({ file });
@@ -28,7 +29,7 @@ export const actions = {
 
         // Write the file to the static folder
         await uploadPhoto(file as File);
-        await saveFileMetadaDataToDb(event.locals.db, file as File, { username });
+        await saveFileMetadaDataToDb(event.locals.db, file as File, { username, uid });
       });
 
       return {

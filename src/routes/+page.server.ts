@@ -10,11 +10,14 @@ export interface Photo {
 }
 
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, cookies }) => {
 
+  const user = JSON.parse(cookies.get('user') || "{}");
   const db = locals.db;
   const collection = db.collection("photos");
-  const photos = await collection.find({}).toArray() as Photo[];
+  const photos = await collection.find({
+    uid: user.uid
+  }).toArray() as Photo[];
 
   return {
     photos: photos.map((photo: Photo) => {
