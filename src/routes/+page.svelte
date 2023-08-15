@@ -6,7 +6,9 @@
 
 	function generateSrcset(name: string) {
 		const sizes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-		return sizes.map((size) => `/api/image?filename=${name}&q=80&w=${size}&h=${size}&fm=avif ${size}w`).join(', ');
+		return sizes
+			.map((size) => `/api/image?filename=${name}&q=80&w=${size}&h=${size}&fm=avif ${size}w`)
+			.join(', ');
 	}
 </script>
 
@@ -27,7 +29,6 @@
 </section>
 
 <style>
-
 	section {
 		display: flex;
 		flex-wrap: wrap;
@@ -37,18 +38,14 @@
 	}
 	.image-card {
 		display: inline-block;
-    margin: auto;
-    width: calc(100vw / 4 - calc(0.1rem * 4));
-    aspect-ratio: 1/1;
+		margin: auto;
+		width: calc(100vw / 4 - calc(0.1rem * 4));
+		aspect-ratio: 1/1;
 		background-color: aliceblue;
 	}
 	.image-card img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-	}
-
-	.image-card p {
-		margin: 0;
 	}
 </style>
