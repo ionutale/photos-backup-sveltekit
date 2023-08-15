@@ -1,6 +1,9 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
+      - echo "mongo uri is: $MONGO_URI"
+  - name: "gcr.io/cloud-builders/docker"
+    args:
       - build
       - '--no-cache'
       - '-t'
