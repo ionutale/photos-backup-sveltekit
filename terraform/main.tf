@@ -11,6 +11,19 @@ resource "google_secret_manager_secret_version" "github-token-secret-version" {
   secret_data = file("../.ssh/gh-token-clasic")
 }
 
+resource "google_secret_manager_secret" "mongodb-uri" {
+  secret_id = "mongodb-uri"
+
+  replication {
+    automatic = true
+  } 
+}
+
+resource "google_secret_manager_secret_version" "mongodb-uri-version" {
+  secret = google_secret_manager_secret.mongodb-uri.id
+  secret_data = file("../.ssh/mongodb-uri")
+}
+
 data "google_iam_policy" "p4sa-secretAccessor" {
   binding {
     role = "roles/secretmanager.secretAccessor"
@@ -25,22 +38,52 @@ resource "google_secret_manager_secret_iam_policy" "policy" {
   policy_data = data.google_iam_policy.p4sa-secretAccessor.policy_data
 }
 
-resource "google_cloudbuildv2_connection" "my-connection" {
+resource "google_cloudbuildv2_connection" "photos-backup-connection" {
   location = "us-west1"
-  name     = "my-connection"
+  name     = "photos-backup-connection"
 
   github_config {
-    app_installation_id = 40683138
-    
+    app_installation_id = 9038219
+
     authorizer_credential {
       oauth_token_secret_version = google_secret_manager_secret_version.github-token-secret-version.id
     }
   }
 }
 
-resource "google_cloudbuildv2_repository" "my-repository" {
+resource "google_cloudbuildv2_repository" "photos-backup-repository" {
   location          = "us-west1"
   name              = "photos-backup-sveltekit"
-  parent_connection = google_cloudbuildv2_connection.my-connection.name
-  remote_uri        = "git@github.com:ionutale/photos-backup-sveltekit.git"
+  parent_connection = google_cloudbuildv2_connection.photos-backup-connection.name
+  remote_uri        = "https://github.com/ionutale/photos-backup-sveltekit.git"
+}
+
+resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
+  name = "photos-backup-sveltekit-trigger"
+  github {
+    owner = "ionutale"
+    name  = "photos-backup-sveltekit"
+    push {
+      branch = "main"
+      //tag    = "production"
+    }
+  }
+  ignored_files = [".gitignore"]
+  filename      = "cloudbuild.yaml"
+  #  build {
+  #     step {
+  #     name       = "node" 
+  #     entrypoint = "npm"
+  #     args       = ["install"]
+  #     }
+  #   }
+
+  substitutions = {
+    _MONGO_URI     = google_secret_manager_secret_version.mongodb-uri-version.secret_data
+    _AR_HOSTNAME   = "europe-west8-docker.pkg.dev"
+    _DEPLOY_REGION = "europe-west8"
+    _PLATFORM      = "managed"
+    _SERVICE_NAME  = "photos-backup-sveltekit"
+    _TRIGGER_ID    = "cloud-build-photos-backup-trigger"
+  }
 }
