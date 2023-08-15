@@ -1,7 +1,7 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
-      - echo "mongo uri is: $_MONGO_URI"
+    echo: "mongo uri is: $_MONGO_URI"
   - name: "gcr.io/cloud-builders/docker"
     args:
       - build
