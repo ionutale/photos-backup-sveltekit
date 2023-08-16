@@ -29,7 +29,7 @@ data "google_iam_policy" "p4sa-secretAccessor" {
     role = "roles/secretmanager.secretAccessor"
     // Here, service-265210792609 is the Google Cloud project number for my-project-name.
     //       service-265210792609@gcp-sa-cloudbuild.iam.gserviceaccount.com
-    members = ["serviceAccount:service-265210792609@gcp-sa-cloudbuild.iam.gserviceaccount.com"]
+    members = ["serviceAccount:service-592125011368@gcp-sa-cloudbuild.iam.gserviceaccount.com"]
   }
 }
 
@@ -58,6 +58,10 @@ resource "google_cloudbuildv2_repository" "photos-backup-repository" {
   remote_uri        = "https://github.com/ionutale/photos-backup-sveltekit.git"
 }
 
+data "google_service_account" "terraform-service-account" {
+  account_id = "108740639292427573773"
+}
+
 resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
   name = "photos-backup-sveltekit-trigger"
   github {
@@ -70,6 +74,7 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
   }
   ignored_files = [".gitignore"]
   filename      = "cloudbuild.yaml"
+  service_account = data.google_service_account.terraform-service-account.email
   #  build {
   #     step {
   #     name       = "node" 
