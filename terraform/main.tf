@@ -16,11 +16,11 @@ resource "google_secret_manager_secret" "mongodb-uri" {
 
   replication {
     automatic = true
-  } 
+  }
 }
 
 resource "google_secret_manager_secret_version" "mongodb-uri-version" {
-  secret = google_secret_manager_secret.mongodb-uri.id
+  secret      = google_secret_manager_secret.mongodb-uri.id
   secret_data = file("../.ssh/mongodb-uri")
 }
 
@@ -72,8 +72,8 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
       //tag    = "production"
     }
   }
-  ignored_files = [".gitignore"]
-  filename      = "cloudbuild.yaml"
+  ignored_files   = [".gitignore"]
+  filename        = "cloudbuild.yaml"
   service_account = data.google_service_account.terraform-service-account.email
   #  build {
   #     step {
@@ -91,4 +91,29 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
     _SERVICE_NAME  = "photos-backup-sveltekit"
     _TRIGGER_ID    = "cloud-build-photos-backup-trigger"
   }
+}
+
+resource "google_cloud_run_v2_service" "default" {
+  name     = "photos-backup-sveltekit"
+  location = "us-central1"
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    containers {
+      # image = "eu.gcr.io/europe-west8/photos-backup-sveltekit"
+      image = "gcr.io/cloudrun/placeholder@sha256:b3aeb23f49574ccba2cf6688ee36a9496e8b07d3abcbafcd9b6333165b5ef1b1"
+
+    }
+
+    service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"
+  }
+}
+
+resource "google_cloud_run_service_iam_binding" "default" {
+  location = google_cloud_run_v2_service.default.location
+  service  = google_cloud_run_v2_service.default.name
+  role     = "roles/run.invoker"
+  members = [
+    "allUsers"
+  ]
 }
