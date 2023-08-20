@@ -1,8 +1,9 @@
 import { fail } from '@sveltejs/kit';
 import { Storage } from '@google-cloud/storage';
-const bucketName = 'aiu-family-media';
 import type { Db } from "mongodb";
 import type { RequestEvent } from '../$types.js';
+
+const bucketName = 'photos-backup-sveltekit';
 
 export const actions = {
   upload: async (event: RequestEvent) => {

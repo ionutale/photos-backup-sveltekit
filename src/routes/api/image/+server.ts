@@ -1,9 +1,9 @@
 import { Storage } from '@google-cloud/storage';
-const bucketName = 'aiu-family-media';
-const chacheBucketName = 'aiu-family-media-cache';
-
 import type { RequestHandler } from '@sveltejs/kit';
 import sharp from 'sharp';
+
+const bucketName = 'photos-backup-sveltekit';
+const chacheBucketName = `${bucketName}-cache`;
 
 export const GET: RequestHandler = async (event) => {
   try {
