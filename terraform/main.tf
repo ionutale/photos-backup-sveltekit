@@ -29,7 +29,7 @@ data "google_iam_policy" "p4sa-secretAccessor" {
     role = "roles/secretmanager.secretAccessor"
     // Here, service-265210792609 is the Google Cloud project number for my-project-name.
     //       service-265210792609@gcp-sa-cloudbuild.iam.gserviceaccount.com
-    members = ["serviceAccount:service-592125011368@gcp-sa-cloudbuild.iam.gserviceaccount.com"]
+    members = ["serviceAccount:service-${var.cloud_project_number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"]
   }
 }
 
@@ -39,8 +39,8 @@ resource "google_secret_manager_secret_iam_policy" "policy" {
 }
 
 resource "google_cloudbuildv2_connection" "photos-backup-connection" {
-  location = "europe-west3"
-  name     = "photos-backup-connection"
+  location = var.region
+  name     = "${var.service_name}-connection"
 
   github_config {
     app_installation_id = 9038219
@@ -52,8 +52,8 @@ resource "google_cloudbuildv2_connection" "photos-backup-connection" {
 }
 
 resource "google_cloudbuildv2_repository" "photos-backup-repository" {
-  location          = "europe-west3"
-  name              = "photos-backup-sveltekit"
+  location          = var.region
+  name              = var.service_name
   parent_connection = google_cloudbuildv2_connection.photos-backup-connection.name
   remote_uri        = "https://github.com/ionutale/photos-backup-sveltekit.git"
 }
@@ -63,7 +63,7 @@ data "google_service_account" "terraform-service-account" {
 }
 
 resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
-  name = "photos-backup-sveltekit-trigger"
+  name = "${var.service_name}-trigger"
   github {
     owner = "ionutale"
     name  = "photos-backup-sveltekit"
@@ -73,7 +73,7 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
   }
   ignored_files   = [".gitignore"]
   filename        = "cloudbuild.yaml"
-  service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"
+  #  service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"
   #  build {
   #     step {
   #     name       = "node" 
@@ -84,17 +84,17 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
 
   substitutions = {
     _MONGO_URI     = google_secret_manager_secret_version.mongodb-uri-version.secret_data
-    _AR_HOSTNAME   = "europe-west3-docker.pkg.dev"
-    _DEPLOY_REGION = "europe-west3"
+    _AR_HOSTNAME   = "${var.region}-docker.pkg.dev"
+    _DEPLOY_REGION = var.region
     _PLATFORM      = "managed"
-    _SERVICE_NAME  = "photos-backup-sveltekit"
+    _SERVICE_NAME  = var.service_name
     _TRIGGER_ID    = "cloud-build-photos-backup-trigger"
   }
 }
 
 resource "google_cloud_run_v2_service" "default" {
-  name     = "photos-backup-sveltekit"
-  location = "europe-west3"
+  name     = var.service_name
+  location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
