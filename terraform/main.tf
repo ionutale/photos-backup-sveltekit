@@ -39,7 +39,7 @@ resource "google_secret_manager_secret_iam_policy" "policy" {
 }
 
 resource "google_cloudbuildv2_connection" "photos-backup-connection" {
-  location = "us-west1"
+  location = "europe-west3"
   name     = "photos-backup-connection"
 
   github_config {
@@ -52,7 +52,7 @@ resource "google_cloudbuildv2_connection" "photos-backup-connection" {
 }
 
 resource "google_cloudbuildv2_repository" "photos-backup-repository" {
-  location          = "us-west1"
+  location          = "europe-west3"
   name              = "photos-backup-sveltekit"
   parent_connection = google_cloudbuildv2_connection.photos-backup-connection.name
   remote_uri        = "https://github.com/ionutale/photos-backup-sveltekit.git"
@@ -69,12 +69,11 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
     name  = "photos-backup-sveltekit"
     push {
       branch = "main"
-      //tag    = "production"
     }
   }
   ignored_files   = [".gitignore"]
   filename        = "cloudbuild.yaml"
-  service_account = data.google_service_account.terraform-service-account.email
+  service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"
   #  build {
   #     step {
   #     name       = "node" 
@@ -85,8 +84,8 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
 
   substitutions = {
     _MONGO_URI     = google_secret_manager_secret_version.mongodb-uri-version.secret_data
-    _AR_HOSTNAME   = "europe-west8-docker.pkg.dev"
-    _DEPLOY_REGION = "europe-west8"
+    _AR_HOSTNAME   = "europe-west3-docker.pkg.dev"
+    _DEPLOY_REGION = "europe-west3"
     _PLATFORM      = "managed"
     _SERVICE_NAME  = "photos-backup-sveltekit"
     _TRIGGER_ID    = "cloud-build-photos-backup-trigger"
@@ -95,14 +94,16 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
 
 resource "google_cloud_run_v2_service" "default" {
   name     = "photos-backup-sveltekit"
-  location = "us-central1"
+  location = "europe-west3"
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     containers {
       # image = "eu.gcr.io/europe-west8/photos-backup-sveltekit"
       image = "gcr.io/cloudrun/placeholder@sha256:b3aeb23f49574ccba2cf6688ee36a9496e8b07d3abcbafcd9b6333165b5ef1b1"
-
+      ports {
+        container_port = 4173
+      }
     }
 
     service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"

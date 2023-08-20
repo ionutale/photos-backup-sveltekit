@@ -1,4 +1,4 @@
 provider "google" {
   project = "beta-dodolandia"
-  region  = "us-central1"
+  region  = "europe-west3"
 }
