@@ -118,3 +118,19 @@ resource "google_cloud_run_service_iam_binding" "default" {
     "allUsers"
   ]
 }
+
+resource "google_storage_bucket" "photos-backup-sveltekit-bucket" {
+  name          = var.service_name
+  location      = "EU"
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "photos-backup-sveltekit-cache-bucket" {
+  name          = "${var.service_name}-cache"
+  location      = "EU"
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+}
