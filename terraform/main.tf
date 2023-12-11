@@ -2,7 +2,11 @@ resource "google_secret_manager_secret" "github-token-secret" {
   secret_id = "github-token-secret"
 
   replication {
-    automatic = true
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -15,7 +19,11 @@ resource "google_secret_manager_secret" "mongodb-uri" {
   secret_id = "mongodb-uri"
 
   replication {
-    automatic = true
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -35,7 +43,7 @@ data "google_iam_policy" "p4sa-secretAccessor" {
 
 resource "google_secret_manager_secret_iam_policy" "policy" {
   secret_id   = google_secret_manager_secret.github-token-secret.secret_id
-  policy_data = data.google_iam_policy.p4sa-secretAccessor.policy_data
+  policy_data = data.google_iam_policy.p4sa-secretAccessor.policy_data 
 }
 
 resource "google_cloudbuildv2_connection" "photos-backup-connection" {
@@ -56,10 +64,12 @@ resource "google_cloudbuildv2_repository" "photos-backup-repository" {
   name              = var.service_name
   parent_connection = google_cloudbuildv2_connection.photos-backup-connection.name
   remote_uri        = "https://github.com/ionutale/photos-backup-sveltekit.git"
+
+
 }
 
 data "google_service_account" "terraform-service-account" {
-  account_id = "108740639292427573773"
+  account_id = "tf-test-account"
 }
 
 resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
@@ -71,8 +81,8 @@ resource "google_cloudbuild_trigger" "photos-backup-sveltekit-trigger" {
       branch = "main"
     }
   }
-  ignored_files   = [".gitignore"]
-  filename        = "cloudbuild.yaml"
+  ignored_files = [".gitignore"]
+  filename      = "cloudbuild.yaml"
   #  service_account = "tf-test-account@beta-dodolandia.iam.gserviceaccount.com"
   #  build {
   #     step {

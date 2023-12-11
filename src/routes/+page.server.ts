@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   const db = locals.db;
   const collection = db.collection("photos");
   const photos = await collection.find({
-    uid: user.uid
+    uid: user?.uid || "no-uid"
   }).toArray() as Photo[];
 
   return {
