@@ -3,7 +3,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import sharp from 'sharp';
 
 const bucketName = 'photos-backup-sveltekit';
-const chacheBucketName = `${bucketName}-cache`;
+const cacheBucketName = `${bucketName}-cache`;
 
 export const GET: RequestHandler = async (event) => {
   try {
@@ -20,6 +20,36 @@ export const GET: RequestHandler = async (event) => {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable'
       },
+      status: 200
+    });
+  } catch (e: any) {
+    console.error(e);
+    // throw e;
+    return new Response(e.message, {
+      status: 500
+    });
+  }
+}
+
+export const DELETE: RequestHandler = async (event) => {
+  try {
+    const fileName = event.url.searchParams.get("filename") || "default.jpg";
+    const db = event.locals.db;
+
+    // Creates a client
+    const storage = new Storage();
+    await storage.bucket(bucketName).file(fileName).delete().catch((e) => {
+      console.error('file not found in bucket:', e.message);
+    })
+
+    console.log("deleting from db", fileName);
+    await db.collection("photos").deleteOne({
+      name: fileName
+    }).catch((e: any) => {
+      console.error('file not found in db:', e.message);
+    })
+
+    return new Response("Deleted", {
       status: 200
     });
   } catch (e: any) {
@@ -72,7 +102,7 @@ async function getPhoto(fileName: string, width: number, height: number, format:
   const storage = new Storage();
   const processedFileName = `${fileName}-${width}-${height}-${format}-${quality}`;
 
-  const [cacheFile] = await storage.bucket(chacheBucketName).file(processedFileName).download().catch((e) => {
+  const [cacheFile] = await storage.bucket(cacheBucketName).file(processedFileName).download().catch((e) => {
     console.error(e.message);
     return [null];
   });
@@ -90,7 +120,7 @@ async function getPhoto(fileName: string, width: number, height: number, format:
   const resizedImage = await convertPhoto(file, width, height, format, quality);
 
   // save the resized image to the cache bucket
-  await storage.bucket(chacheBucketName).file(processedFileName).save(resizedImage).catch((e) => {
+  await storage.bucket(cacheBucketName).file(processedFileName).save(resizedImage).catch((e) => {
     console.error("error saving the image to the cache bucket", e);
   })
 
