@@ -1,3 +1,4 @@
+import { clamp, getFormatFromExtension } from '$lib/params-validation';
 import { Storage } from '@google-cloud/storage';
 import type { RequestHandler } from '@sveltejs/kit';
 import sharp from 'sharp';
@@ -5,15 +6,32 @@ import sharp from 'sharp';
 const bucketName = 'photos-backup-sveltekit';
 const cacheBucketName = `${bucketName}-cache`;
 
+type Options = {
+  width: number;
+  height: number;
+  format: 'avif' | 'webp' | 'png' | 'jpeg';
+  quality: number;
+  cropX: number;
+  cropY: number;
+}
+
 export const GET: RequestHandler = async (event) => {
   try {
+    
     const fileName = event.url.searchParams.get("filename") || "default.jpg";
-    const width = Number(event.url.searchParams.get("w")) || 200;
-    const height = Number(event.url.searchParams.get("h")) || 200;
-    const format = event.url.searchParams.get("fm") || "jpg";
-    const quality = Number(event.url.searchParams.get("q")) || 75;
+
+    const options: Options = {
+      width: clamp(Number(event.url.searchParams.get("w")), 0, 20000),
+      height : clamp(Number(event.url.searchParams.get("h")), 0, 20000),
+      format: getFormatFromExtension(event.url.searchParams.get("fm") ?? ''),
+      quality: clamp(Number(event.url.searchParams.get("q")) || 75, 0, 100),
+      cropX: clamp(Number(event.url.searchParams.get("cx")) || 0, 0, 20000),
+      cropY: clamp(Number(event.url.searchParams.get("cy")) || 0, 0, 20000),
+    }
+
+
     // Creates a client
-    const { cacheFile, contentType } = await getPhoto(fileName, width, height, format, quality);
+    const { cacheFile, contentType } = await getPhoto(fileName, options);
     // return the resized image
     return new Response(cacheFile, {
       headers: {
@@ -61,47 +79,67 @@ export const DELETE: RequestHandler = async (event) => {
   }
 }
 
-function convertPhoto(file: Buffer, width: number, height: number, format: string, quality: number) {
+async function convertPhoto(file: Buffer, options: Options) {
 
   const sharpBuffer = sharp(file);
+  const imageWidth = (await sharpBuffer.metadata()).width ?? 1;
+  const imageHeight = (await sharpBuffer.metadata()).height ?? 1;
 
-  if (width > 0 && height > 0) {
-    sharpBuffer.resize(width, height);
-  } else if (width > 0) {
-    sharpBuffer.resize(width);
-  } else if (height > 0) {
-    sharpBuffer.resize(null, height);
+  const ratio = imageWidth / imageHeight;
+
+  const resizedWidth = clamp(options.width, 1, imageWidth);
+  const resizedHeight = clamp(options.height, 1, imageHeight);
+
+  const cropX = clamp(options.cropX, 0, imageWidth);
+  const cropY = clamp(options.cropY, 0, imageHeight);
+
+  // if the options specify a crop, crop the image
+  if (cropX > 0 || cropY > 0) {
+    sharpBuffer.extract({
+      left: cropX,
+      top: cropY,
+      width: resizedWidth,
+      height: resizedHeight,
+    });
   }
 
-  switch (format) {
+
+  // if the image is not square, resize it to fit the requested width or height
+  sharpBuffer.resize(resizedWidth, resizedHeight);
+
+  // sharpBuffer[options.format]({ quality: options.quality, force: true });
+  // return sharpBuffer.toBuffer();
+  switch (options.format) {
     case "avif":
       return sharpBuffer
-        .avif({ quality: quality, force: true })
+        .avif({ quality: options.quality, force: true })
         .toBuffer();
     case "webp":
       return sharpBuffer
-        .webp({ quality: quality, force: true })
-        .toBuffer();
-    case "jpg":
-      return sharpBuffer
-        .jpeg({ quality: quality, force: true })
+        .webp({ quality: options.quality, force: true })
         .toBuffer();
     case "png":
       return sharpBuffer
-        .png({ quality: quality, force: true })
+        .png({ quality: options.quality, force: true })
         .toBuffer();
+    // ignored because typescript is a bitch
+    // also everything needs to default to jpg
+    // case "jpg":
+    //   return sharpBuffer
+    //     .jpeg({ quality: quality, force: true })
+    //     .toBuffer();
 
     default:
       return sharpBuffer
-        .jpeg({ quality: quality, force: true })
+        .jpeg({ quality: options.quality, force: true })
         .toBuffer();
   }
 }
 
-async function getPhoto(fileName: string, width: number, height: number, format: string, quality: number) {
+async function getPhoto(fileName: string, options: Options) {
   const storage = new Storage();
-  const processedFileName = `${fileName}-${width}-${height}-${format}-${quality}`;
-
+  const processedFileName = `${fileName}-${Object.entries(options)}`
+  // download the processed cached image if exists
   const [cacheFile] = await storage.bucket(cacheBucketName).file(processedFileName).download().catch((e) => {
     console.error(e.message);
     return [null];
@@ -110,14 +148,14 @@ async function getPhoto(fileName: string, width: number, height: number, format:
     // return the cached image
     return {
       cacheFile,
-      contentType: `image/${format}`
+      contentType: `image/${options.format}`
     }
   }
 
-  // Uploads a local file to the bucket
+  // Downloads the master image from bucket
   const [file] = await storage.bucket(bucketName).file(fileName).download();
-  // resize the image and convert it to avif
-  const resizedImage = await convertPhoto(file, width, height, format, quality);
+  // resize the image and convert it to the requested format
+  const resizedImage = await convertPhoto(file, options);
 
   // save the resized image to the cache bucket
   await storage.bucket(cacheBucketName).file(processedFileName).save(resizedImage).catch((e) => {
@@ -126,6 +164,6 @@ async function getPhoto(fileName: string, width: number, height: number, format:
 
   return {
     cacheFile: resizedImage,
-    contentType: `image/${format}`
+    contentType: `image/${options.format}`
   }
 }
